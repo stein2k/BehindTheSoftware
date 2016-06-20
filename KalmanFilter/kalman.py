@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg
 
 def main():
 
@@ -23,18 +24,22 @@ def main():
     x_est = np.array(((0,),(0,)),dtype=np.float64)
     P_est = np.array(((0,0),(0,0)),dtype=np.float64)
 
+    Q = (sigma_a * np.array(
+            ((0.25,0.5),(0.5,1.0)),dtype=np.float64))
+    D,V = np.linalg.eig(Q)
+    G = np.dot(V,np.diag(np.sqrt(D)))
+
     for n in range(100):
 
         # Update position and velocity of truck
-        x = np.dot(F,x) + np.dot(np.array(((np.sqrt(sigma_a/4.0),0),
-            (0,np.sqrt(sigma_a))),dtype=np.float64),np.random.randn(2,1))
+        x = np.dot(F,x) + np.dot(G,np.random.randn(2,1))
 
         # Observe truck position
         z = np.dot(H,x) + np.sqrt(sigma_z)*np.random.randn()
 
         # Time Update (Prediction)
         x_est = np.dot(F,x_est)
-        P_est = (np.dot(F,np.dot(P_est,F.T)) + np.eye(2))
+        P_est = (np.dot(np.dot(F,P_est),F.T) + np.eye(2))
 
         # Update
         y = z - np.dot(H,x_est)
@@ -51,6 +56,11 @@ def main():
         print 'x =', x
         print 'y =', y
         print 'x_est =', x_est
+        print 'P_est =', P_est
+        print "P =", Q #(np.sqrt(sigma_a)*np.array(
+            #((0.25,0.5),(0.5,1.0)),dtype=np.float64))
+        print "G =", G
+        print "det(P) =", 
 
 if __name__ == '__main__':
     main()
